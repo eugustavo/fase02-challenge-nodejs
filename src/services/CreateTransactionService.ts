@@ -1,6 +1,11 @@
 import TransactionsRepository from '../repositories/TransactionsRepository';
 import Transaction from '../models/Transaction';
 
+interface RequestDTO {
+  title: string;
+  value: number;
+  type: 'income' | 'outcome';
+}
 class CreateTransactionService {
   private transactionsRepository: TransactionsRepository;
 
@@ -8,8 +13,26 @@ class CreateTransactionService {
     this.transactionsRepository = transactionsRepository;
   }
 
-  public execute(): Transaction {
-    // TODO
+  public execute({ title, type, value }: RequestDTO): Transaction {
+    const { total } = this.transactionsRepository.getBalance();
+
+    if (type !== 'income' && type !== 'outcome') {
+      throw Error('Type can only be income or outcome');
+    }
+
+    if (type === 'outcome' && value > total) {
+      throw Error(
+        'You are trying to withdraw a larger amount than your balance',
+      );
+    }
+
+    const transaction = this.transactionsRepository.create({
+      title,
+      type,
+      value,
+    });
+
+    return transaction;
   }
 }
 
